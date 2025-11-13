@@ -1,4 +1,4 @@
-# Political Neutrality - Open Source Evaluation
+# Political Even-handedness Evaluation
 
 To accompany [blog post](www.anthropic.com) in releasing details around our political bias evaluations 
 
@@ -86,7 +86,7 @@ Please cite the usage of this dataset here:
 @misc{anthropicPoliticalNeutrality,
     author = {Shen, Judy Hanwen and Appel, Ruth and Tucker, Madeleine and Jagadish, Kamya, and Maheshwary, Paruul and Askell, Amanda and Durmus, Esin},
     year = {2025}, 
-    title = {Measuring political even-handedness in Claude - Paired Prompts Dataset}, 
+    title = {Political Even-handedness Evaluation V1}, 
     url= {TBD},
 }
 ```
