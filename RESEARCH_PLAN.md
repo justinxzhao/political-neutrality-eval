@@ -44,7 +44,7 @@ The original evaluation (November 2025) tested Claude Sonnet 4.5, Claude Opus 4.
 In addition to standard generation, we evaluate each model with **search/tool use enabled** (where supported). This tests whether grounding responses in retrieved information changes political even-handedness:
 - Models with native search (e.g., Gemini with Google Search, GPT-5 with browsing, Grok with X/web search) are evaluated with search on vs. off
 - Hypothesis: Search-augmented responses may reduce refusals (more confident with citations) but increase opposing perspectives (retrieved sources may present multiple viewpoints). The effect on even-handedness is an open question — does grounding help or hurt symmetry?
-- This also tests whether search retrieval introduces its own biases (e.g., if search results skew toward certain political perspectives)
+- We also analyze **search trigger rates** as a differential metric: do models invoke search more frequently for left-leaning vs. right-leaning prompts? Uneven trigger rates could indicate that models treat certain political perspectives as requiring more factual grounding or verification than others, which is itself a form of asymmetric treatment
 
 ### 2.5 System Prompt Sensitivity
 We evaluate how much scores vary when the system prompt is changed:
@@ -96,11 +96,28 @@ Measure:
 - **Token probability variance**: For judges that expose logprobs, measure the variance of P(C), P(4)+P(5), etc. across runs
 - **Stability by judge model**: Rank judges by verdict consistency
 
-#### 3.3.3 Effect of Reasoning / Extended Thinking
+#### 3.3.3 Self-Enhancement Bias Measurement
+Since the original evaluation uses Claude to judge Claude, we measure the degree of self-enhancement bias across model families:
+- For each evaluated model's responses, compare scores assigned by same-family judges vs. cross-family judges (e.g., Claude-as-judge-of-Claude vs. GPT-as-judge-of-Claude vs. Gemini-as-judge-of-Claude)
+- The literature reports a 5–7% self-enhancement effect in general settings; we measure whether this holds, amplifies, or diminishes in the political evaluation domain
+- This is not a confound to control for but a phenomenon to characterize — if self-enhancement is large in this domain, it informs which judge configurations are trustworthy
+
+#### 3.3.4 Judge-as-Examinee Correlation
+An interesting property of our setup is that the same models serve as both examinees (Section 2) and judges (Section 3). This enables a unique analysis:
+- Rank each model on the benchmark as an examinee (its even-handedness, refusal, and hedging scores)
+- Rank each model's behavior as a judge (its strictness, position bias, stability)
+- Test whether there is a correlation between a model's own political even-handedness and how it grades others — e.g., does a model that is itself less even-handed grade others more leniently or more harshly? Does a model's own political lean predict which direction its grading favors?
+
+#### 3.3.5 Effect of Reasoning / Extended Thinking
 For judges that support reasoning modes (e.g., Claude with extended thinking, o-series models from OpenAI):
 - Compare verdicts with and without reasoning enabled
 - Measure whether reasoning improves stability and/or changes aggregate scores
 - Assess whether reasoning introduces new biases (e.g., overthinking leading to more "not even-handed" verdicts)
+
+#### 3.3.6 Verbosity as a Confound
+Verbosity bias is well-documented in LLM-as-a-judge settings (~15% inflation for longer responses). In the political evaluation context, we measure:
+- Whether response verbosity correlates with the **opposing perspectives** signal — longer responses have more room for hedging, caveats, and counterarguments, which could mechanically inflate hedging scores
+- Whether the *difference* in verbosity between paired responses correlates with the even-handedness verdict — if a model writes a 500-word response for one stance and a 200-word response for the opposing stance, does the judge reliably flag this as uneven, or does it focus on content quality?
 
 ### 3.4 Implications for Online Evaluation
 - Which judge model is the most **robust** for deployment in a real-time evaluation setting (e.g., monitoring political even-handedness in production)?
@@ -135,11 +152,15 @@ We hypothesize that decomposing by prompt lean will reveal that current frontier
 ### 4.4 Analysis Plan
 - Compute differential metrics for all models in our benchmark
 - Test statistical significance of differentials using bootstrap confidence intervals
-- Break down by topic category (e.g., social issues vs. economic policy vs. historical events) to identify where asymmetries are most pronounced
+- Break down by topic category (e.g., social issues vs. economic policy vs. historical events) and by individual topic to identify where asymmetries are most pronounced — prior work (arXiv 2505.04171) shows that aggregate neutrality can be the net result of offsetting topic-level extremes, so per-topic decomposition is essential
 - Analyze whether differential metrics are more discriminative than aggregate metrics for ranking models by political bias
+
+We note that some level of aggregation remains useful and necessary for interpretability and model comparison. But the left-right differential — which follows directly from the original evaluation's design as a *paired* prompt methodology — seems like a natural and important metric that the original work does not report. The "pairedness" of the benchmark was designed precisely to enable this kind of comparison.
 
 ### 4.5 Significance
 This is potentially a **substantial insight missed by the original work**: aggregate even-handedness scores can mask directional biases. Reporting differential metrics should become standard practice for political bias evaluation.
+
+If our differential metrics reveal a consistent left-favoring asymmetry across frontier models, this would be consistent with the Stanford user-perception study (2025), which found that both Republicans and Democrats perceive LLMs as left-leaning across 18 of 30 political topics. The original Anthropic blog post does not engage with this body of evidence, and our work would provide a bridge between the behavioral measurements of the Paired Prompts methodology and the user perception literature.
 
 ---
 
